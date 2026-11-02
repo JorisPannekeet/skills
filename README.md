@@ -16,10 +16,10 @@ These skills give the agent those standards up front, so you get the right resul
 npx skills@latest add JorisPannekeet/skills
 ```
 
-Or copy a single skill folder into `~/.claude/skills/`:
+Or install a single skill:
 
 ```bash
-git clone https://github.com/JorisPannekeet/skills && cp -R skills/skills/show-me ~/.claude/skills/
+npx skills@latest add JorisPannekeet/skills --skill show-me
 ```
 
 ## Why use it?
