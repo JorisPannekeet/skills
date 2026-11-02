@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Headed Playwright walkthrough with video. Usage: node record-web.mjs steps.json
-import { readFileSync, mkdirSync, renameSync } from 'node:fs';
+import { readFileSync, mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { spawn } from 'node:child_process';
 
-let chromium;
-try { ({ chromium } = await import('playwright')); }
+let chromium, registry;
+try { ({ chromium } = await import('playwright')); ({ registry } = await import('playwright-core/lib/server/registry/index')); }
 catch { console.error('Playwright not found. Run: npm i -D playwright@1.48.2 && npx playwright install chromium'); process.exit(2); }
 
 const cfg = JSON.parse(readFileSync(process.argv[2], 'utf8'));
@@ -15,8 +16,9 @@ const stamp = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.g
 const target = join(outDir, `${stamp}-${cfg.name ?? 'demo'}.webm`);
 
 const pause = cfg.slowMo ?? 600;
+const fps = 60;
 const browser = await chromium.launch({ headless: false });
-const context = await browser.newContext({ viewport, recordVideo: { dir: outDir, size: viewport } });
+const context = await browser.newContext({ viewport });
 // Playwright's video never shows a pointer, so draw one in the page that follows real mouse events.
 await context.addInitScript(() => {
   const install = () => {
@@ -40,6 +42,21 @@ await context.addInitScript(() => {
   if (document.readyState === 'loading') addEventListener('DOMContentLoaded', install); else install();
 });
 const page = await context.newPage();
+
+// Playwright's recordVideo is fixed at 25 fps and 1 Mbps, so encode Chrome's screencast frames ourselves.
+const ffmpeg = spawn(registry.findExecutable('ffmpeg').executablePathOrDie('javascript'),
+  `-loglevel error -f image2pipe -framerate ${fps} -c:v mjpeg -i pipe:0 -y -an -c:v vp8 -crf 6 -b:v 12M -deadline realtime -cpu-used 8 -threads 4`.split(' ').concat(target),
+  { stdio: ['pipe', 'ignore', 'inherit'] });
+const encoded = new Promise((ok) => ffmpeg.on('close', ok));
+const cdp = await context.newCDPSession(page);
+let last = null, start = 0, written = 0;
+const writeUntil = (t) => { for (const n = Math.round((t - start) * fps); written < n; written++) ffmpeg.stdin.write(last); };
+cdp.on('Page.screencastFrame', ({ data, metadata, sessionId }) => {
+  cdp.send('Page.screencastFrameAck', { sessionId }).catch(() => {});
+  if (last) writeUntil(metadata.timestamp); else start = metadata.timestamp;
+  last = Buffer.from(data, 'base64');
+});
+await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 90, maxWidth: viewport.width * 2, maxHeight: viewport.height * 2 });
 
 let pos = { x: viewport.width / 2, y: viewport.height / 2 };
 const syncCursor = () => page.evaluate(({ x, y }) => window.__showmePlace?.(x, y), pos).catch(() => {});
@@ -90,10 +107,12 @@ try {
   await syncCursor();
   await page.waitForTimeout(2000);
 } finally {
-  const video = page.video();
+  await cdp.send('Page.stopScreencast').catch(() => {});
+  if (last) writeUntil(Date.now() / 1000 + 1 / fps);
+  ffmpeg.stdin.end();
+  await encoded;
   await context.close();
   await browser.close();
-  if (video) renameSync(await video.path(), target);
 }
 
 console.log(`VIDEO ${target}`);
