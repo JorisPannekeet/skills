@@ -36,4 +36,4 @@ Actions: `goto` (url), `click` (selector), `fill` (selector, value), `press` (ke
 Prefer text/role selectors (`text=Afrekenen`, `role=button[name="Pay"]`) over CSS classes.
 For kiosk screens use a portrait viewport (e.g. 1080×1920); otherwise 1440×900.
 
-The script highlights each element before it's used, prints the video path, and exits non-zero on the first failing step (the video up to that point is kept).
+The script draws a cursor that glides to each element and shows a ring on every click (Playwright's video has no pointer of its own), highlights the element before it's used, prints the video path, and exits non-zero on the first failing step (the video up to that point is kept).
