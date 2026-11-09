@@ -38,6 +38,7 @@ cliclick kp:return
 ```
 - `-e 600` eases the move over ~0.6 s. Never jump the cursor (`m:` without `-e`); the user must see it travel.
 - Can't find the element through accessibility (custom-drawn UI, canvas, some Electron views)? Take a screenshot (`screencapture -x /tmp/s.png`), read it, and estimate the coordinates. On Retina screens divide screenshot pixels by 2 to get points.
+- Never click through AppleScript/System Events (`click button …`); that skips the cursor. Use those only to find coordinates.
 - A computer-use MCP that moves the real cursor works too; use it instead of cliclick.
 - Pause ~1 s between actions and hold the final state ~2 s.
 

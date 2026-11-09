@@ -21,8 +21,9 @@ Include one edge/error state only if it was part of the change.
 ## 3. Run it live and record
 Follow the platform reference. Always:
 - Visible window (never headless) so the user can watch along.
+- A mouse cursor is visible in every video: it glides to each element before every click/tap. Use the bundled scripts; a recording without a cursor is a failed run, redo it.
 - Slow enough to follow (~0.5–1 s between actions).
-- Record a video to `./show-me/<YYYYMMDD-HHMM>-<feature>.(webm|mp4|mov)`.
+- Record a video to `./show-me/<YYYYMMDD-HHMM>-<feature>.(webm|mov)`.
 - Leave the browser/Simulator/app open at the final state for a few seconds.
 
 ## 4. Report — short

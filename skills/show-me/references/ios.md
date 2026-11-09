@@ -1,25 +1,40 @@
 # iOS / iPadOS walkthrough
 
+The Simulator's own recorder (`simctl recordVideo`) and xcodebuildmcp taps never show a pointer. So record the Simulator window from the screen and tap with the real mouse cursor, exactly like the desktop flow.
+
+## 0. One-time setup
+Same as `references/desktop.md` step 0 (`brew install cliclick`, Screen Recording + Accessibility permissions).
+
 ## 1. Build, boot, show
 With xcodebuildmcp: build & run the app on a simulator (pick the device the feature targets; iPad for kiosk/iPadOS work).
-Then bring the Simulator to the front so the user can watch: `open -a Simulator`.
+No xcodebuildmcp? `xcodebuild … -destination 'platform=iOS Simulator,name=<device>'`, then `xcrun simctl install booted <App.app>` and `xcrun simctl launch booted <bundle-id>`.
+
+Bring the Simulator to the front and get its window bounds:
+```bash
+osascript -e 'tell application "Simulator" to activate'
+osascript -e 'tell application "System Events" to tell process "Simulator" to get {position, size} of window 1'
+# → 400, 60, 440, 920   (x, y, width, height)
+```
 
 ## 2. Start recording
 ```bash
-bash <skill-dir>/scripts/record-ios.sh start <feature-name>
+bash <skill-dir>/scripts/record-desktop.sh start <feature-name> 400,60,440,920
 ```
 
-## 3. Walk through
-Use xcodebuildmcp's UI tools (describe the UI to find elements, then tap / swipe / type text).
-Pause ~1 s between actions (`sleep 1`) so the video is followable.
-Hold the final state ~2 s.
+## 3. Walk through with the cursor
+Tell the user in one line: "Hands off mouse and keyboard, the cursor moves by itself for a moment."
+
+Find each element's screen point: take a screenshot (`screencapture -x -R400,60,440,920 /tmp/s.png`), read it, and estimate the element's center inside the window (Retina: divide screenshot pixels by 2), then add the window's x/y. Then glide and click; a click in the Simulator is a tap:
+```bash
+cliclick -e 600 m:620,500 w:300 c:.
+cliclick t:"hello"
+```
+- Never tap through xcodebuildmcp or `simctl` during the recording; those taps have no cursor. Use them only to build, launch and read the UI.
+- Never jump the cursor (`m:` without `-e`).
+- Pause ~1 s between actions and hold the final state ~2 s.
 
 ## 4. Stop recording
 ```bash
-bash <skill-dir>/scripts/record-ios.sh stop
+bash <skill-dir>/scripts/record-desktop.sh stop
 ```
-Prints the .mp4 path. Always run `stop`, also when a step failed — otherwise the file is unfinished.
-
-No xcodebuildmcp available? Build with `xcodebuild … -destination 'platform=iOS Simulator,name=<device>'`,
-install with `xcrun simctl install booted <App.app>`, launch with `xcrun simctl launch booted <bundle-id>`,
-and ask the user to tap through while recording runs.
+Prints the .mov path. Always run `stop`, also when a step failed; otherwise the file is unfinished.
