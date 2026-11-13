@@ -6,9 +6,12 @@
 - Scratch vectors created once at module init in a non-hot file, passed in.
 - Plain `for (let i = 0; i < n; i++)` loops.
 - Spatial hash grid preallocated for collisions with 500+ enemies.
-- Instanced meshes in three.js; update instance matrices in-place.
+- 3D: instanced meshes in three.js; update instance matrices in-place.
+- 2D: one atlas, variants (flips, flashes, recolors, rotations) baked at load so a draw is one blit; cap small draws per frame and count them in dark or particle-heavy scenes.
 
 ## Budgets enforced in CI
 - First download gzipped ≤ budget (~124 KB reference).
-- Headless frame-time benchmark at 500 enemies; fail on regression.
+- Each lazy chunk has its own cap (art is the usual one). The budget script names every chunk it counts, so nothing loads unmeasured.
+- Headless frame-time benchmark at 500 enemies (arcade) or in the densest real scene (story); fail on regression.
+- Art generated at load is measured too: time it on a slow device, not only in Node.
 - Allocation profile check: zero allocations per tick in a sampled run.

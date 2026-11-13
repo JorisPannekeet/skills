@@ -31,5 +31,5 @@ Agents optimize for "it works". These skills push them toward "it works, it's fa
 
 ## Reference
 
-- **[game-maker](./skills/game-maker/SKILL.md)**: Build browser games with tiny bundles, deterministic simulation, zero-GC hot loops, code-generated pixel art and chiptune audio, TLA+ verified state machines, and headless bot balancing.
+- **[game-maker](./skills/game-maker/SKILL.md)**: Build browser games with tiny bundles, deterministic simulation, zero-GC hot loops, code-generated pixel art and chiptune audio, verified state machines, headless bot balancing, and a visual check loop so the agent looks at what it drew.
 - **[show-me](./skills/show-me/SKILL.md)**: See what was just built. Opens a visible browser, the iOS Simulator, or your macOS desktop app with a real moving cursor, walks through the new feature at human speed, records a video, and ends with a 3-bullet summary.
